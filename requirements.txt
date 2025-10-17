@@ -1,0 +1,6 @@
+flask==2.3.2
+flask-sqlalchemy==3.0.3
+flask-migrate==4.0.4
+apscheduler==3.10.1
+python-dateutil==2.8.2
+# thermy library should be installed from the GitHub repository

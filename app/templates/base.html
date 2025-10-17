@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipt Printer Task Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .task-card {
+            margin-bottom: 1rem;
+            transition: all 0.2s;
+        }
+        .task-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .printer-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .printer-connected {
+            color: green;
+        }
+        .printer-disconnected {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">Receipt Task Manager</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Tasks</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/tasks/add">Add Task</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% block content %}{% endblock %}
+    </div>
+
+    <div class="printer-status" id="printerStatus">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Printer Status</h5>
+                <p id="printerStatusText" class="printer-disconnected">Checking...</p>
+                <button id="connectPrinterBtn" class="btn btn-sm btn-primary">Connect</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Check printer status every 30 seconds
+        function updatePrinterStatus() {
+            fetch('/printer/status')
+                .then(response => response.json())
+                .then(data => {
+                    const statusElement = document.getElementById('printerStatusText');
+                    if (data.connected) {
+                        statusElement.textContent = 'Connected';
+                        statusElement.className = 'printer-connected';
+                    } else {
+                        statusElement.textContent = 'Disconnected';
+                        statusElement.className = 'printer-disconnected';
+                    }
+                });
+        }
+
+        // Connect to printer
+        document.getElementById('connectPrinterBtn').addEventListener('click', function() {
+            fetch('/printer/connect', {
+                method: 'POST',
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updatePrinterStatus();
+                } else {
+                    alert('Failed to connect to printer. Check logs for details.');
+                }
+            });
+        });
+
+        // Initial check and then check every 30 seconds
+        updatePrinterStatus();
+        setInterval(updatePrinterStatus, 30000);
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>
